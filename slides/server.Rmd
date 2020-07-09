@@ -18,7 +18,7 @@ The first step from RStudio is creating a connection object that
 opens up a channel of communication to the database. 
 
 ```{r, handout = 0, eval = TRUE}
-library(DBI)
+library(RSQLite)
 con <- dbConnect(RSQLite::SQLite(), 
                  "data/portal.sqlite")
 
@@ -62,8 +62,9 @@ df <- data.frame(
   id = c(1, 2),
   name = c('Alice', 'Bob')
 )
-dbWriteTable(con, 'observers', df,
-             append = TRUE)
+
+dbWriteTable(con, "observers", 
+             value = df)
 ```
 
 ===
