@@ -1,0 +1,73 @@
+---
+---
+
+## Connecting to a Database
+
+We are going to look at the Portal mammals data organized in an SQLite database.
+This is stored in a single file `portal.sqlite` that can be explored using SQL
+or with tools like [SQLite Viewer](https://inloop.github.io/sqlite-viewer/) or [DB Browser](https://sqlitebrowser.org/). We will use R functions in the DBI package 
+to interact with the database. 
+{:.notes}
+
+
+===
+
+## Connections
+
+The first step from RStudio is creating a connection object that
+opens up a channel of communication to the database. 
+
+```{r, handout = 0, eval = TRUE}
+library(DBI)
+con <- dbConnect(RSQLite::SQLite(), 
+                 "data/portal.sqlite")
+
+```
+
+
+===
+
+With the connection object availble, you can begin exploring the database.
+
+```{r}
+dbListTables(con)
+```
+
+===
+
+```{r}
+dbListFields(con, 'species')
+```
+
+===
+
+Read an entire database table into an R data frame with `dbReadTable`, or if you
+prefer "tidyverse" functions, use the [dplyr](){:.rlib} `tbl` function.
+
+```{r, handout = 0, message=FALSE}
+library(dplyr)
+species <- tbl(con, 'species')
+```
+```{r}
+species
+```
+
+===
+
+The `dbWriteTable` function provides a mechanism for uploading data, as long as
+the user specified in the connection object has permission to create tables.
+
+```{r, handout = 0}
+df <- data.frame(
+  id = c(1, 2),
+  name = c('Alice', 'Bob')
+)
+dbWriteTable(con, 'observers', df,
+             append = TRUE)
+```
+
+===
+
+```{r}
+tbl(con, 'observers')
+```
