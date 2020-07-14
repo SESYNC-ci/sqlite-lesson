@@ -1,1 +1,0 @@
-# Worksheet for SQLite lesson
