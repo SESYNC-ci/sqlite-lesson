@@ -1,6 +1,6 @@
 title: Database Principles and Use
 handouts:
- - worksheet-1.R
+ - worksheet.R
  - data/README.md
  - data/portal.sqlite
 tag: v0.3
