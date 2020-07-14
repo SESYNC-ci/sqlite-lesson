@@ -32,8 +32,9 @@ In the `plots` table, `id` is the primary key. Any new record *cannot* duplicate
 
 ===
 
-Creating the `observers` table with `id` as a primary key will prevent the
+Recreate the `observers` table with `id` as a primary key will prevent the
 duplication observed from multiple identical `dbWriteTable` calls.
+
 
 
 
@@ -49,8 +50,8 @@ dbCreateTable(con, 'observers', list(
 
 ===
 
-When appending a data frame to the table created with "serial primary key",
-the `id` is automatically generated and unique.
+When appending a data frame to the table created with "integer primary key",
+the `id` is automatically generated and unique. 
 
 
 
@@ -62,25 +63,6 @@ dbWriteTable(con, 'observers', df,
              append = TRUE)
 ~~~
 {:title="{{ site.data.lesson.handouts[0] }}" .text-document}
-
-
-
-
-~~~r
-> tbl(con, 'observers')
-~~~
-{:title="Console" .input}
-
-
-~~~
-# Source:   table<observers> [?? x 2]
-# Database: sqlite 3.30.1 [/nfs/public-data/training/portal.sqlite]
-     id name 
-  <int> <chr>
-1     1 Alice
-2     2 Bob  
-~~~
-{:.output}
 
 
 ===
@@ -102,7 +84,7 @@ dbWriteTable(con, 'observers', df,
 
 
 ~~~
-Error: UNIQUE constraint failed: observers.id
+Error: external pointer is not valid
 ~~~
 {:.output}
 
@@ -128,9 +110,26 @@ In the `surveys` table, `id` is the primary key and both `plot_id` and
 
 ===
 
-Foreign keys are checked **before** nonsensical references end up in the data:
+To enable foreign key constraints in sqlite run the following:
 
 
+
+
+~~~r
+dbExecute(con, 'PRAGMA foreign_keys = ON;')
+~~~
+{:title="{{ site.data.lesson.handouts[0] }}" .text-document}
+
+
+~~~
+[1] 0
+~~~
+{:.output}
+
+
+===
+
+Foreign keys are checked **before** nonsensical references end up in the data. To enable foreign key constraints in sqlite run the following:
 
 
 
@@ -139,12 +138,18 @@ df <- data.frame(
   month = 7,
   day = 16,
   year = 1977,
-  plot_id = -1
+  plot_id = 'Rodent'
 )
 dbWriteTable(con, 'surveys', df,
              append = TRUE)
 ~~~
 {:title="{{ site.data.lesson.handouts[0] }}" .text-document}
+
+
+~~~
+Error: FOREIGN KEY constraint failed
+~~~
+{:.output}
 
 
 ===
@@ -176,27 +181,11 @@ table.
 
 
 
-~~~sql
-> SELECT year FROM surveys;
+
+~~~r
+dbGetQuery(con, "SELECT year FROM surveys")
 ~~~
-{:title="Console" .input}
-
-
-
-Table: Displaying records 1 - 10
-
-| year|
-|----:|
-| 1977|
-| 1977|
-| 1977|
-| 1977|
-| 1977|
-| 1977|
-| 1977|
-| 1977|
-| 1977|
-| 1977|
+{:title="{{ site.data.lesson.handouts[0] }}" .no-eval .text-document}
 
 
 A note on style: we have capitalized the words SELECT and FROM because they are
@@ -211,28 +200,10 @@ comma-separated list right after SELECT:
 
 
 
-~~~sql
-> SELECT year, month, day
-+ FROM surveys;
+~~~r
+dbGetQuery(con, "SELECT year, month, day FROM surveys")
 ~~~
-{:title="Console" .input}
-
-
-
-Table: Displaying records 1 - 10
-
-| year| month| day|
-|----:|-----:|---:|
-| 1977|     7|  16|
-| 1977|     7|  16|
-| 1977|     7|  16|
-| 1977|     7|  16|
-| 1977|     7|  16|
-| 1977|     7|  16|
-| 1977|     7|  16|
-| 1977|     7|  16|
-| 1977|     7|  16|
-| 1977|     7|  16|
+{:title="{{ site.data.lesson.handouts[0] }}" .no-eval .text-document}
 
 
 The line break before `FROM` is also good form, particularly as the length of the query grows.
@@ -243,28 +214,11 @@ Or select all of the columns in a table using a wildcard:
 
 
 
-~~~sql
-> SELECT *
-+ FROM surveys;
+~~~r
+dbGetQuery(con, "SELECT *
+FROM surveys;")
 ~~~
-{:title="Console" .input}
-
-
-
-Table: Displaying records 1 - 10
-
-|record_id | month| day| year| plot_id|species_id |sex | hindfoot_length| weight|
-|:---------|-----:|---:|----:|-------:|:----------|:---|---------------:|------:|
-|1         |     7|  16| 1977|       2|NL         |M   |              32|     NA|
-|2         |     7|  16| 1977|       3|NL         |M   |              33|     NA|
-|3         |     7|  16| 1977|       2|DM         |F   |              37|     NA|
-|4         |     7|  16| 1977|       7|DM         |M   |              36|     NA|
-|5         |     7|  16| 1977|       3|DM         |M   |              35|     NA|
-|6         |     7|  16| 1977|       1|PF         |M   |              14|     NA|
-|7         |     7|  16| 1977|       2|PE         |F   |              NA|     NA|
-|8         |     7|  16| 1977|       1|DM         |M   |              37|     NA|
-|9         |     7|  16| 1977|       1|DM         |F   |              34|     NA|
-|10        |     7|  16| 1977|       6|PF         |F   |              20|     NA|
+{:title="{{ site.data.lesson.handouts[0] }}" .no-eval .text-document}
 
 
 
@@ -277,24 +231,12 @@ particularly helpful when getting a feel for very large tables.
 
 
 
-~~~sql
-> SELECT year, species_id
-+ FROM surveys
-+ LIMIT 4;
+~~~r
+dbGetQuery(con, "SELECT year, species_id
+FROM surveys
+LIMIT 4;")
 ~~~
-{:title="Console" .input}
-
-
-
-Table: 4 records
-
-| year|species_id |
-|----:|:----------|
-| 1977|NL         |
-| 1977|NL         |
-| 1977|DM         |
-| 1977|DM         |
-
+{:title="{{ site.data.lesson.handouts[0] }}" .no-eval .text-document}
 
 
 
@@ -307,29 +249,11 @@ been sampled we use ``DISTINCT``
 
 
 
-~~~sql
-> SELECT DISTINCT species_id
-+ FROM surveys;
+~~~r
+dbGetQuery(con, "SELECT DISTINCT species_id
+FROM surveys;")
 ~~~
-{:title="Console" .input}
-
-
-
-Table: Displaying records 1 - 10
-
-|species_id |
-|:----------|
-|NL         |
-|DM         |
-|PF         |
-|PE         |
-|DS         |
-|PP         |
-|SH         |
-|OT         |
-|DO         |
-|OX         |
-
+{:title="{{ site.data.lesson.handouts[0] }}" .no-eval .text-document}
 
 
 ===
@@ -339,29 +263,11 @@ returned
 
 
 
-~~~sql
-> SELECT DISTINCT year, species_id
-+ FROM surveys;
+~~~r
+dbGetQuery(con, "SELECT DISTINCT year, species_id
+FROM surveys;")
 ~~~
-{:title="Console" .input}
-
-
-
-Table: Displaying records 1 - 10
-
-| year|species_id |
-|----:|:----------|
-| 1977|NL         |
-| 1977|DM         |
-| 1977|PF         |
-| 1977|PE         |
-| 1977|DS         |
-| 1977|PP         |
-| 1977|SH         |
-| 1977|OT         |
-| 1977|DO         |
-| 1977|OX         |
-
+{:title="{{ site.data.lesson.handouts[0] }}" .no-eval .text-document}
 
 
 ===
@@ -374,30 +280,12 @@ needed it in kg instead of g we would use
 
 
 
-~~~sql
-> SELECT plot_id, species_id,
-+   sex, weight / 1000.0
-+ FROM surveys;
+~~~r
+dbGetQuery(con, "SELECT plot_id, species_id,
+  sex, weight / 1000.0
+FROM surveys;")
 ~~~
-{:title="Console" .input}
-
-
-
-Table: Displaying records 1 - 10
-
-| plot_id|species_id |sex |weight / 1000.0 |
-|-------:|:----------|:---|:---------------|
-|       2|NL         |M   |NA              |
-|       3|NL         |M   |NA              |
-|       2|DM         |F   |NA              |
-|       7|DM         |M   |NA              |
-|       3|DM         |M   |NA              |
-|       1|PF         |M   |NA              |
-|       2|PE         |F   |NA              |
-|       1|DM         |M   |NA              |
-|       1|DM         |F   |NA              |
-|       6|PF         |F   |NA              |
-
+{:title="{{ site.data.lesson.handouts[0] }}" .no-eval .text-document}
 
 
 The expression `weight / 1000.0` is evaluated for each row
@@ -410,29 +298,12 @@ expression.
 
 
 
-~~~sql
-> SELECT plot_id, species_id, sex,
-+   weight / 1000 AS weight_kg
-+ FROM surveys;
+~~~r
+dbGetQuery(con, "SELECT plot_id, species_id, sex,
+  weight / 1000 AS weight_kg
+FROM surveys;")
 ~~~
-{:title="Console" .input}
-
-
-
-Table: Displaying records 1 - 10
-
-| plot_id|species_id |sex |weight_kg |
-|-------:|:----------|:---|:---------|
-|       2|NL         |M   |NA        |
-|       3|NL         |M   |NA        |
-|       2|DM         |F   |NA        |
-|       7|DM         |M   |NA        |
-|       3|DM         |M   |NA        |
-|       1|PF         |M   |NA        |
-|       2|PE         |F   |NA        |
-|       1|DM         |M   |NA        |
-|       1|DM         |F   |NA        |
-|       6|PF         |F   |NA        |
+{:title="{{ site.data.lesson.handouts[0] }}" .no-eval .text-document}
 
 
 
@@ -444,29 +315,12 @@ easier to read.
 
 
 
-~~~sql
-> SELECT plot_id, species_id, sex,
-+   ROUND(weight / 1000.0, 2) AS weight_kg
-+ FROM surveys;
+~~~r
+dbGetQuery(con, "SELECT plot_id, species_id, sex,
+  ROUND(weight / 1000.0, 2) AS weight_kg
+FROM surveys;")
 ~~~
-{:title="Console" .input}
-
-
-
-Table: Displaying records 1 - 10
-
-| plot_id|species_id |sex |weight_kg |
-|-------:|:----------|:---|:---------|
-|       2|NL         |M   |NA        |
-|       3|NL         |M   |NA        |
-|       2|DM         |F   |NA        |
-|       7|DM         |M   |NA        |
-|       3|DM         |M   |NA        |
-|       1|PF         |M   |NA        |
-|       2|PE         |F   |NA        |
-|       1|DM         |M   |NA        |
-|       1|DM         |F   |NA        |
-|       6|PF         |F   |NA        |
+{:title="{{ site.data.lesson.handouts[0] }}" .no-eval .text-document}
 
 
 The underlying data in the wgt column of the table does not change. The query,
@@ -485,29 +339,12 @@ our query.
 
 
 
-~~~sql
-> SELECT *
-+ FROM surveys
-+ WHERE species_id = 'DM';
+~~~r
+dbGetQuery(con, "SELECT *
+FROM surveys
+WHERE species_id = 'DM';")
 ~~~
-{:title="Console" .input}
-
-
-
-Table: Displaying records 1 - 10
-
-| record_id| month| day| year| plot_id|species_id |sex | hindfoot_length| weight|
-|---------:|-----:|---:|----:|-------:|:----------|:---|---------------:|------:|
-|         3|     7|  16| 1977|       2|DM         |F   |              37|     NA|
-|         4|     7|  16| 1977|       7|DM         |M   |              36|     NA|
-|         5|     7|  16| 1977|       3|DM         |M   |              35|     NA|
-|         8|     7|  16| 1977|       1|DM         |M   |              37|     NA|
-|         9|     7|  16| 1977|       1|DM         |F   |              34|     NA|
-|        12|     7|  16| 1977|       7|DM         |M   |              38|     NA|
-|        13|     7|  16| 1977|       3|DM         |M   |              35|     NA|
-|        14|     7|  16| 1977|       8|DM         |NA  |              NA|     NA|
-|        15|     7|  16| 1977|       6|DM         |F   |              36|     NA|
-|        16|     7|  16| 1977|       4|DM         |F   |              36|     NA|
+{:title="{{ site.data.lesson.handouts[0] }}" .no-eval .text-document}
 
 
 ===
@@ -516,29 +353,13 @@ Of course, we can do the same thing with numbers.
 
 
 
-~~~sql
-> SELECT *
-+ FROM surveys
-+ WHERE year >= 2000;
+~~~r
+dbGetQuery(con, "SELECT *
+FROM surveys
+WHERE year >= 2000;")
 ~~~
-{:title="Console" .input}
+{:title="{{ site.data.lesson.handouts[0] }}" .no-eval .text-document}
 
-
-
-Table: Displaying records 1 - 10
-
-|record_id | month| day| year| plot_id|species_id |sex | hindfoot_length| weight|
-|:---------|-----:|---:|----:|-------:|:----------|:---|---------------:|------:|
-|30159     |     1|   8| 2000|       1|PP         |F   |              22|     17|
-|30160     |     1|   8| 2000|       1|DO         |M   |              35|     53|
-|30161     |     1|   8| 2000|       1|PP         |F   |              21|     17|
-|30162     |     1|   8| 2000|       1|DM         |M   |              36|     50|
-|30163     |     1|   8| 2000|       1|PP         |M   |              20|     16|
-|30164     |     1|   8| 2000|       1|PB         |M   |              26|     27|
-|30165     |     1|   8| 2000|       1|PP         |F   |              22|     15|
-|30166     |     1|   8| 2000|       1|PP         |M   |              23|     19|
-|30167     |     1|   8| 2000|       1|DO         |M   |              35|     41|
-|30168     |     1|   8| 2000|       1|PB         |M   |              25|     24|
 
 
 ===
@@ -549,29 +370,13 @@ example, suppose we want the data on *Dipodomys merriami* starting in the year
 
 
 
-~~~sql
-> SELECT *
-+ FROM surveys
-+ WHERE year >= 2000 AND species_id = 'DM';
+~~~r
+dbGetQuery(con, "SELECT *
+FROM surveys
+WHERE year >= 2000 AND species_id = 'DM';")
 ~~~
-{:title="Console" .input}
+{:title="{{ site.data.lesson.handouts[0] }}" .no-eval .text-document}
 
-
-
-Table: Displaying records 1 - 10
-
-| record_id| month| day| year| plot_id|species_id |sex | hindfoot_length| weight|
-|---------:|-----:|---:|----:|-------:|:----------|:---|---------------:|------:|
-|     30162|     1|   8| 2000|       1|DM         |M   |              36|     50|
-|     30179|     1|   8| 2000|      12|DM         |M   |              36|     60|
-|     30196|     1|   8| 2000|      17|DM         |M   |              37|     52|
-|     30197|     1|   8| 2000|      17|DM         |F   |              34|     43|
-|     30210|     1|   8| 2000|      22|DM         |M   |              38|     56|
-|     30215|     1|   8| 2000|      22|DM         |F   |              34|     28|
-|     30227|     1|  10| 2000|       4|DM         |M   |              34|     45|
-|     30241|     1|  10| 2000|      11|DM         |M   |              35|     43|
-|     30242|     1|  10| 2000|      11|DM         |M   |              35|     44|
-|     30244|     1|  10| 2000|      11|DM         |M   |              35|     44|
 
 
 ===
@@ -582,30 +387,12 @@ are combined in the way that we intend. If we wanted to get all the animals for
 
 
 
-~~~sql
-> SELECT *
-+ FROM surveys
-+ WHERE (year >= 2000 OR year <= 1990)
-+   AND species_id = 'DM';
+~~~r
+dbGetQuery(con, "SELECT *
+FROM surveys
+WHERE (year >= 2000 OR year <= 1990)
+  AND species_id = 'DM';")
 ~~~
-{:title="Console" .input}
-
-
-
-Table: Displaying records 1 - 10
-
-| record_id| month| day| year| plot_id|species_id |sex | hindfoot_length| weight|
-|---------:|-----:|---:|----:|-------:|:----------|:---|---------------:|------:|
-|         3|     7|  16| 1977|       2|DM         |F   |              37|     NA|
-|         4|     7|  16| 1977|       7|DM         |M   |              36|     NA|
-|         5|     7|  16| 1977|       3|DM         |M   |              35|     NA|
-|         8|     7|  16| 1977|       1|DM         |M   |              37|     NA|
-|         9|     7|  16| 1977|       1|DM         |F   |              34|     NA|
-|        12|     7|  16| 1977|       7|DM         |M   |              38|     NA|
-|        13|     7|  16| 1977|       3|DM         |M   |              35|     NA|
-|        14|     7|  16| 1977|       8|DM         |NA  |              NA|     NA|
-|        15|     7|  16| 1977|       6|DM         |F   |              36|     NA|
-|        16|     7|  16| 1977|       4|DM         |F   |              36|     NA|
-
+{:title="{{ site.data.lesson.handouts[0] }}" .no-eval .text-document}
 
 

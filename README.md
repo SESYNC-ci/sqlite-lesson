@@ -4,7 +4,7 @@ Leverage relational models for organizing and querying data
 
 ## Instructor Notes
 
-This lesson is similar to Introduction to Databases but does not use a postgres database connection. 
+This lesson is similar to Introduction to Databases but uses SQLite instead of PostgreSQL.  
 
 ## Cyberhelp @SESYNC
 

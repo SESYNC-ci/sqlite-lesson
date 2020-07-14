@@ -53,5 +53,5 @@ with it using exactly the same tools we learn today.
 The three key tables in the relational database are:
 
 - **plots**
-- **animals**
+- **surveys**
 - **species**

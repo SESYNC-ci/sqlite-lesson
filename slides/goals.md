@@ -17,8 +17,6 @@ distinction that has mostly outlived its usefulness.
 {:.notes}
 
 
-{:.notes}
-
 ===
 
 ## Objectives

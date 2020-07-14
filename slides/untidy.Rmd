@@ -80,8 +80,12 @@ key of the second table.
 The SQL keyword "JOIN" matches up two tables in the way dictated by the
 constraint following "ON", duplicating records as necessary.
 
-
-```{sql connection=con, eval = FALSE}
+```{r, handout = 0, eval = TRUE, echo=FALSE}
+library(RSQLite)
+con <- dbConnect(RSQLite::SQLite(), 
+                 "data/portal.sqlite")
+```
+```{sql connection=con, eval=FALSE}
 SELECT weight, plot_type
 FROM surveys
 JOIN plots
@@ -108,7 +112,7 @@ Surveys is an "association table" because it includes two foreign keys.
 
 ===
 
-```{sql connection=con, eval = FALSE}
+```{sql connection=con, eval=FALSE}
 SELECT weight, genus, plot_type
 FROM surveys
 JOIN plots
@@ -120,7 +124,7 @@ JOIN species
 The resulting table could be the basis for the `portal` data.frame needed in the
 R command `lm(weight ~ genus + treatment, data = portal)`.
 
-```{r cleanup, eval = FALSE, echo = FALSE, results = 'hide'}
-dbRemoveTable(con, 'observers')
+```{r cleanup, eval=TRUE, echo=FALSE, results ='hide'}
+# dbRemoveTable(con, 'observers')
 dbDisconnect(con)
 ```

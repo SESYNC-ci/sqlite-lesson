@@ -5,8 +5,8 @@
 
 We are going to look at the Portal mammals data organized in an SQLite database.
 This is stored in a single file `portal.sqlite` that can be explored using SQL
-or with tools like [SQLite Viewer](https://inloop.github.io/sqlite-viewer/) or [DB Browser](https://sqlitebrowser.org/). We will use R functions in the DBI package 
-to interact with the database. 
+or with tools like [SQLite Viewer](https://inloop.github.io/sqlite-viewer/) or [DB Browser](https://sqlitebrowser.org/). We will use R functions in the DBI-compliant
+RSQLite package to interact with the database. 
 {:.notes}
 
 
@@ -15,7 +15,7 @@ to interact with the database.
 ## Connections
 
 The first step from RStudio is creating a connection object that
-opens up a channel of communication to the database. 
+opens up a channel of communication to the database file. 
 
 
 
@@ -127,18 +127,8 @@ dbWriteTable(con, "observers",
 
 
 ~~~r
-> tbl(con, 'observers')
+> dbReadTable(con, 'observers')
 ~~~
-{:title="Console" .input}
+{:title="Console" .no-eval .input}
 
-
-~~~
-# Source:   table<observers> [?? x 2]
-# Database: sqlite 3.30.1 [/nfs/public-data/training/portal.sqlite]
-     id name 
-  <dbl> <chr>
-1     1 Alice
-2     2 Bob  
-~~~
-{:.output}
 

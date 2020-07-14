@@ -32,13 +32,16 @@ In the `plots` table, `id` is the primary key. Any new record *cannot* duplicate
 
 ===
 
-Creating the `observers` table with `id` as a primary key will prevent the
+Recreate the `observers` table with `id` as a primary key will prevent the
 duplication observed from multiple identical `dbWriteTable` calls.
 
-```{r, include = FALSE}
-dbRemoveTable(con, 'observers')
+```{r, handout = 0, eval = TRUE, echo=FALSE}
+library(RSQLite)
+con <- dbConnect(RSQLite::SQLite(), 
+                 "data/portal.sqlite")
 ```
-```{r, handout = 0}
+
+```{r, handout=0}
 dbCreateTable(con, 'observers', list(
   id = 'integer primary key',
   name = 'text'
@@ -47,19 +50,15 @@ dbCreateTable(con, 'observers', list(
 
 ===
 
-When appending a data frame to the table created with "serial primary key",
-the `id` is automatically generated and unique.
+When appending a data frame to the table created with "integer primary key",
+the `id` is automatically generated and unique. 
 
-```{r, handout = 0}
+```{r, handout=0}
 df <- data.frame(
   name = c('Alice', 'Bob')
 )
 dbWriteTable(con, 'observers', df,
              append = TRUE)
-```
-
-```{r}
-tbl(con, 'observers')
 ```
 
 ===
@@ -97,18 +96,27 @@ In the `surveys` table, `id` is the primary key and both `plot_id` and
 
 ===
 
-Foreign keys are checked **before** nonsensical references end up in the data:
+To enable foreign key constraints in sqlite run the following:
 
-```{r, include=FALSE}
+```{r, handout = 0, eval = TRUE, echo=FALSE}
+library(RSQLite)
+con <- dbConnect(RSQLite::SQLite(), 
+                 "data/portal.sqlite")
+```
+```{r, handout=0}
 dbExecute(con, 'PRAGMA foreign_keys = ON;')
 ```
+
+===
+
+Foreign keys are checked **before** nonsensical references end up in the data. To enable foreign key constraints in sqlite run the following:
 
 ```{r, handout = 0, error = TRUE}
 df <- data.frame(
   month = 7,
   day = 16,
   year = 1977,
-  plot_id = -1
+  plot_id = 'Rodent'
 )
 dbWriteTable(con, 'surveys', df,
              append = TRUE)
@@ -141,8 +149,13 @@ RMarkdown file:
 Let’s write a SQL query that selects only the year column from the animals
 table.
 
-```{sql connection=con}
-SELECT year FROM surveys;
+```{r, handout = 0, eval = TRUE, echo=FALSE}
+library(RSQLite)
+con <- dbConnect(RSQLite::SQLite(), 
+                 "data/portal.sqlite")
+```
+```{r, handout=0, eval=FALSE}
+dbGetQuery(con, "SELECT year FROM surveys")
 ```
 
 A note on style: we have capitalized the words SELECT and FROM because they are
@@ -155,9 +168,8 @@ for readability and is a good style to adopt.
 To select data from multiple fields, include multiple fields as a
 comma-separated list right after SELECT:
 
-```{sql connection=con}
-SELECT year, month, day
-FROM surveys;
+```{r, handout=0, eval=FALSE}
+dbGetQuery(con, "SELECT year, month, day FROM surveys")
 ```
 
 The line break before `FROM` is also good form, particularly as the length of the query grows.
@@ -166,9 +178,9 @@ The line break before `FROM` is also good form, particularly as the length of th
 
 Or select all of the columns in a table using a wildcard:
 
-```{sql connection=con}
-SELECT *
-FROM surveys;
+```{r, handout=0, eval=FALSE}
+dbGetQuery(con, "SELECT *
+FROM surveys;")
 ```
 
 
@@ -179,12 +191,11 @@ FROM surveys;
 We can use the LIMIT statement to select only the first few rows. This is
 particularly helpful when getting a feel for very large tables.
 
-```{sql connection=con}
-SELECT year, species_id
+```{r, handout=0, eval=FALSE}
+dbGetQuery(con, "SELECT year, species_id
 FROM surveys
-LIMIT 4;
+LIMIT 4;")
 ```
-
 
 
 ===
@@ -194,22 +205,20 @@ LIMIT 4;
 If we want only the unique values so that we can quickly see what species have
 been sampled we use ``DISTINCT``
 
-```{sql connection=con}
-SELECT DISTINCT species_id
-FROM surveys;
+```{r, handout=0, eval=FALSE}
+dbGetQuery(con, "SELECT DISTINCT species_id
+FROM surveys;")
 ```
-
 
 ===
 
 If we select more than one column, then the distinct pairs of values are
 returned
 
-```{sql connection=con}
-SELECT DISTINCT year, species_id
-FROM surveys;
+```{r, handout=0, eval=FALSE}
+dbGetQuery(con, "SELECT DISTINCT year, species_id
+FROM surveys;")
 ```
-
 
 ===
 
@@ -219,12 +228,11 @@ We can also do calculations with the values in a query. For example, if we
 wanted to look at the mass of each individual, by plot, species, and sex, but we
 needed it in kg instead of g we would use
 
-```{sql connection=con}
-SELECT plot_id, species_id,
+```{r, handout=0, eval=FALSE}
+dbGetQuery(con, "SELECT plot_id, species_id,
   sex, weight / 1000.0
-FROM surveys;
+FROM surveys;")
 ```
-
 
 The expression `weight / 1000.0` is evaluated for each row
 and appended to that row, in a new column.
@@ -234,10 +242,10 @@ and appended to that row, in a new column.
 You can assign the new column a name by typing "AS weight_kg" after the
 expression.
 
-```{sql connection=con}
-SELECT plot_id, species_id, sex,
+```{r, handout=0, eval=FALSE}
+dbGetQuery(con, "SELECT plot_id, species_id, sex,
   weight / 1000 AS weight_kg
-FROM surveys;
+FROM surveys;")
 ```
 
 
@@ -247,10 +255,10 @@ Expressions can use any fields, any arithmetic operators (+ - * /) and a variety
 of built-in functions. For example, we could round the values to make them
 easier to read.
 
-```{sql connection=con}
-SELECT plot_id, species_id, sex,
+```{r, handout=0, eval=FALSE}
+dbGetQuery(con, "SELECT plot_id, species_id, sex,
   ROUND(weight / 1000.0, 2) AS weight_kg
-FROM surveys;
+FROM surveys;")
 ```
 
 The underlying data in the wgt column of the table does not change. The query,
@@ -267,21 +275,22 @@ criteria.  For example, let’s say we only want data for the species "Dipodomys
 merriami", which has a species code of "DM".  We need to add a `WHERE` clause to
 our query.
 
-```{sql connection=con}
-SELECT *
+```{r, handout=0, eval=FALSE}
+dbGetQuery(con, "SELECT *
 FROM surveys
-WHERE species_id = 'DM';
+WHERE species_id = 'DM';")
 ```
 
 ===
 
 Of course, we can do the same thing with numbers.
 
-```{sql connection=con}
-SELECT *
+```{r, handout=0, eval=FALSE}
+dbGetQuery(con, "SELECT *
 FROM surveys
-WHERE year >= 2000;
+WHERE year >= 2000;")
 ```
+
 
 ===
 
@@ -289,11 +298,12 @@ More sophisticated conditions arise from combining tests with AND and OR. For
 example, suppose we want the data on *Dipodomys merriami* starting in the year
 2000.
 
-```{sql connection=con}
-SELECT *
+```{r, handout=0, eval=FALSE}
+dbGetQuery(con, "SELECT *
 FROM surveys
-WHERE year >= 2000 AND species_id = 'DM';
+WHERE year >= 2000 AND species_id = 'DM';")
 ```
+
 
 ===
 
@@ -301,11 +311,10 @@ Parentheses can be used to help with readability and to ensure that AND and OR
 are combined in the way that we intend. If we wanted to get all the animals for
 "DM" since 2000 or up to 1990 we could combine the tests using OR:
 
-```{sql connection=con}
-SELECT *
+```{r, handout=0, eval=FALSE}
+dbGetQuery(con, "SELECT *
 FROM surveys
 WHERE (year >= 2000 OR year <= 1990)
-  AND species_id = 'DM';
+  AND species_id = 'DM';")
 ```
-
 
