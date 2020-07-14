@@ -91,13 +91,13 @@ constraint following "ON", duplicating records as necessary.
 
 
 
-~~~sql
-> SELECT weight, plot_type
-+ FROM surveys
-+ JOIN plots
-+   ON surveys.plot_id = plots.plot_id;
+~~~r
+dbGetQuery(con, "SELECT weight, plot_type
+FROM surveys
+JOIN plots
+  ON surveys.plot_id = plots.plot_id")
 ~~~
-{:title="Console" .no-eval .input}
+{:title="{{ site.data.lesson.handouts[0] }}" .no-eval .text-document}
 
 
 
@@ -122,18 +122,24 @@ Surveys is an "association table" because it includes two foreign keys.
 
 
 
-~~~sql
-> SELECT weight, genus, plot_type
-+ FROM surveys
-+ JOIN plots
-+   ON surveys.plot_id = plots.plot_id
-+ JOIN species
-+   ON surveys.species_id = species.species_id;
+~~~r
+dbGetQuery(con, "SELECT weight, genus, plot_type
+FROM surveys
+JOIN plots
+  ON surveys.plot_id = plots.plot_id
+JOIN species
+  ON surveys.species_id = species.species_id")
 ~~~
-{:title="Console" .no-eval .input}
+{:title="{{ site.data.lesson.handouts[0] }}" .no-eval .text-document}
 
 
 The resulting table could be the basis for the `portal` data.frame needed in the
 R command `lm(weight ~ genus + treatment, data = portal)`.
 
+
+
+~~~
+Warning in connection_release(conn@ptr): Already disconnected
+~~~
+{:.output}
 

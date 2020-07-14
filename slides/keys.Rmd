@@ -133,7 +133,7 @@ database from R (cf. [dbplyr](){:.rlib}), but sometimes it is the only way to
 perform a complicated query.
 {:.notes}
 
-To write SQL statements in RStudio, use the `sql` engine for code chunks in a 
+To write SQL statements in RStudio, it is also possible to use the `sql` engine for code chunks in a 
 RMarkdown file:
 
 ```
@@ -141,6 +141,8 @@ RMarkdown file:
 ...
 ```
 ```
+
+We will continue to use R functions to pass SQL code to the database file using `dbGetQuery` functions.
 
 ===
 
@@ -169,7 +171,8 @@ To select data from multiple fields, include multiple fields as a
 comma-separated list right after SELECT:
 
 ```{r, handout=0, eval=FALSE}
-dbGetQuery(con, "SELECT year, month, day FROM surveys")
+dbGetQuery(con, "SELECT year, month, day 
+           FROM surveys")
 ```
 
 The line break before `FROM` is also good form, particularly as the length of the query grows.
@@ -180,7 +183,7 @@ Or select all of the columns in a table using a wildcard:
 
 ```{r, handout=0, eval=FALSE}
 dbGetQuery(con, "SELECT *
-FROM surveys;")
+FROM surveys")
 ```
 
 
@@ -194,7 +197,7 @@ particularly helpful when getting a feel for very large tables.
 ```{r, handout=0, eval=FALSE}
 dbGetQuery(con, "SELECT year, species_id
 FROM surveys
-LIMIT 4;")
+LIMIT 4")
 ```
 
 
@@ -207,7 +210,7 @@ been sampled we use ``DISTINCT``
 
 ```{r, handout=0, eval=FALSE}
 dbGetQuery(con, "SELECT DISTINCT species_id
-FROM surveys;")
+FROM surveys")
 ```
 
 ===
@@ -217,7 +220,7 @@ returned
 
 ```{r, handout=0, eval=FALSE}
 dbGetQuery(con, "SELECT DISTINCT year, species_id
-FROM surveys;")
+FROM surveys")
 ```
 
 ===
@@ -231,7 +234,7 @@ needed it in kg instead of g we would use
 ```{r, handout=0, eval=FALSE}
 dbGetQuery(con, "SELECT plot_id, species_id,
   sex, weight / 1000.0
-FROM surveys;")
+FROM surveys")
 ```
 
 The expression `weight / 1000.0` is evaluated for each row
@@ -245,7 +248,7 @@ expression.
 ```{r, handout=0, eval=FALSE}
 dbGetQuery(con, "SELECT plot_id, species_id, sex,
   weight / 1000 AS weight_kg
-FROM surveys;")
+FROM surveys")
 ```
 
 
@@ -258,7 +261,7 @@ easier to read.
 ```{r, handout=0, eval=FALSE}
 dbGetQuery(con, "SELECT plot_id, species_id, sex,
   ROUND(weight / 1000.0, 2) AS weight_kg
-FROM surveys;")
+FROM surveys")
 ```
 
 The underlying data in the wgt column of the table does not change. The query,
@@ -278,7 +281,7 @@ our query.
 ```{r, handout=0, eval=FALSE}
 dbGetQuery(con, "SELECT *
 FROM surveys
-WHERE species_id = 'DM';")
+WHERE species_id = 'DM'")
 ```
 
 ===
@@ -288,7 +291,7 @@ Of course, we can do the same thing with numbers.
 ```{r, handout=0, eval=FALSE}
 dbGetQuery(con, "SELECT *
 FROM surveys
-WHERE year >= 2000;")
+WHERE year >= 2000")
 ```
 
 
@@ -301,7 +304,7 @@ example, suppose we want the data on *Dipodomys merriami* starting in the year
 ```{r, handout=0, eval=FALSE}
 dbGetQuery(con, "SELECT *
 FROM surveys
-WHERE year >= 2000 AND species_id = 'DM';")
+WHERE year >= 2000 AND species_id = 'DM'")
 ```
 
 
@@ -315,6 +318,6 @@ are combined in the way that we intend. If we wanted to get all the animals for
 dbGetQuery(con, "SELECT *
 FROM surveys
 WHERE (year >= 2000 OR year <= 1990)
-  AND species_id = 'DM';")
+  AND species_id = 'DM'")
 ```
 

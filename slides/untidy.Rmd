@@ -85,11 +85,11 @@ library(RSQLite)
 con <- dbConnect(RSQLite::SQLite(), 
                  "data/portal.sqlite")
 ```
-```{sql connection=con, eval=FALSE}
-SELECT weight, plot_type
+```{r, handout=0, eval=FALSE}
+dbGetQuery(con, "SELECT weight, plot_type
 FROM surveys
 JOIN plots
-  ON surveys.plot_id = plots.plot_id;
+  ON surveys.plot_id = plots.plot_id")
 ```
 
 
@@ -112,19 +112,19 @@ Surveys is an "association table" because it includes two foreign keys.
 
 ===
 
-```{sql connection=con, eval=FALSE}
-SELECT weight, genus, plot_type
+```{r, handout=0, eval=FALSE}
+dbGetQuery(con, "SELECT weight, genus, plot_type
 FROM surveys
 JOIN plots
   ON surveys.plot_id = plots.plot_id
 JOIN species
-  ON surveys.species_id = species.species_id;
+  ON surveys.species_id = species.species_id")
 ```
 
 The resulting table could be the basis for the `portal` data.frame needed in the
 R command `lm(weight ~ genus + treatment, data = portal)`.
 
-```{r cleanup, eval=TRUE, echo=FALSE, results ='hide'}
+```{r cleanup, handout=0, eval=TRUE, echo=FALSE, results ='hide'}
 # dbRemoveTable(con, 'observers')
 dbDisconnect(con)
 ```

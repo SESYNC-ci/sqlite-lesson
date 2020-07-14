@@ -163,7 +163,7 @@ database from R (cf. [dbplyr](){:.rlib}), but sometimes it is the only way to
 perform a complicated query.
 {:.notes}
 
-To write SQL statements in RStudio, use the `sql` engine for code chunks in a 
+To write SQL statements in RStudio, it is also possible to use the `sql` engine for code chunks in a 
 RMarkdown file:
 
 ```
@@ -171,6 +171,8 @@ RMarkdown file:
 ...
 ```
 ```
+
+We will continue to use R functions to pass SQL code to the database file using `dbGetQuery` functions.
 
 ===
 
@@ -201,7 +203,8 @@ comma-separated list right after SELECT:
 
 
 ~~~r
-dbGetQuery(con, "SELECT year, month, day FROM surveys")
+dbGetQuery(con, "SELECT year, month, day 
+           FROM surveys")
 ~~~
 {:title="{{ site.data.lesson.handouts[0] }}" .no-eval .text-document}
 
@@ -216,7 +219,7 @@ Or select all of the columns in a table using a wildcard:
 
 ~~~r
 dbGetQuery(con, "SELECT *
-FROM surveys;")
+FROM surveys")
 ~~~
 {:title="{{ site.data.lesson.handouts[0] }}" .no-eval .text-document}
 
@@ -234,7 +237,7 @@ particularly helpful when getting a feel for very large tables.
 ~~~r
 dbGetQuery(con, "SELECT year, species_id
 FROM surveys
-LIMIT 4;")
+LIMIT 4")
 ~~~
 {:title="{{ site.data.lesson.handouts[0] }}" .no-eval .text-document}
 
@@ -251,7 +254,7 @@ been sampled we use ``DISTINCT``
 
 ~~~r
 dbGetQuery(con, "SELECT DISTINCT species_id
-FROM surveys;")
+FROM surveys")
 ~~~
 {:title="{{ site.data.lesson.handouts[0] }}" .no-eval .text-document}
 
@@ -265,7 +268,7 @@ returned
 
 ~~~r
 dbGetQuery(con, "SELECT DISTINCT year, species_id
-FROM surveys;")
+FROM surveys")
 ~~~
 {:title="{{ site.data.lesson.handouts[0] }}" .no-eval .text-document}
 
@@ -283,7 +286,7 @@ needed it in kg instead of g we would use
 ~~~r
 dbGetQuery(con, "SELECT plot_id, species_id,
   sex, weight / 1000.0
-FROM surveys;")
+FROM surveys")
 ~~~
 {:title="{{ site.data.lesson.handouts[0] }}" .no-eval .text-document}
 
@@ -301,7 +304,7 @@ expression.
 ~~~r
 dbGetQuery(con, "SELECT plot_id, species_id, sex,
   weight / 1000 AS weight_kg
-FROM surveys;")
+FROM surveys")
 ~~~
 {:title="{{ site.data.lesson.handouts[0] }}" .no-eval .text-document}
 
@@ -318,7 +321,7 @@ easier to read.
 ~~~r
 dbGetQuery(con, "SELECT plot_id, species_id, sex,
   ROUND(weight / 1000.0, 2) AS weight_kg
-FROM surveys;")
+FROM surveys")
 ~~~
 {:title="{{ site.data.lesson.handouts[0] }}" .no-eval .text-document}
 
@@ -342,7 +345,7 @@ our query.
 ~~~r
 dbGetQuery(con, "SELECT *
 FROM surveys
-WHERE species_id = 'DM';")
+WHERE species_id = 'DM'")
 ~~~
 {:title="{{ site.data.lesson.handouts[0] }}" .no-eval .text-document}
 
@@ -356,7 +359,7 @@ Of course, we can do the same thing with numbers.
 ~~~r
 dbGetQuery(con, "SELECT *
 FROM surveys
-WHERE year >= 2000;")
+WHERE year >= 2000")
 ~~~
 {:title="{{ site.data.lesson.handouts[0] }}" .no-eval .text-document}
 
@@ -373,7 +376,7 @@ example, suppose we want the data on *Dipodomys merriami* starting in the year
 ~~~r
 dbGetQuery(con, "SELECT *
 FROM surveys
-WHERE year >= 2000 AND species_id = 'DM';")
+WHERE year >= 2000 AND species_id = 'DM'")
 ~~~
 {:title="{{ site.data.lesson.handouts[0] }}" .no-eval .text-document}
 
@@ -391,7 +394,7 @@ are combined in the way that we intend. If we wanted to get all the animals for
 dbGetQuery(con, "SELECT *
 FROM surveys
 WHERE (year >= 2000 OR year <= 1990)
-  AND species_id = 'DM';")
+  AND species_id = 'DM'")
 ~~~
 {:title="{{ site.data.lesson.handouts[0] }}" .no-eval .text-document}
 
