@@ -80,7 +80,7 @@ references--that permit table joins:
 The primary key in the first table is referred to multiple times in the foreign
 key of the second table.
 
-![]({% include asset.html path="images/many-to-one.png" %}){: width="80%" style="border:0px;box-shadow:none;"}
+![]({% include asset.html path="images/many-to-one.png" %}){: width="50%" style="border:0px;box-shadow:none;"}
 {:.captioned}
 
 ===

@@ -29,6 +29,7 @@ con <- dbConnect(RSQLite::SQLite(),
 
 With the connection object availble, you can begin exploring the database.
 
+
 ```{r}
 dbListTables(con)
 ```

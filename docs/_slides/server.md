@@ -34,6 +34,7 @@ With the connection object availble, you can begin exploring the database.
 
 
 
+
 ~~~r
 > dbListTables(con)
 ~~~
@@ -41,7 +42,7 @@ With the connection object availble, you can begin exploring the database.
 
 
 ~~~
-[1] "observers" "plots"     "species"   "surveys"  
+[1] "plots"     "species"   "surveys"  
 ~~~
 {:.output}
 
