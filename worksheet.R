@@ -1,7 +1,15 @@
+# Worksheet for SQLite lesson
+
+# First you will need to copy the portal.sqlite file
+# to your own workspace so that your changes to the file
+# will not affect everyone else in the class!
+
+file.copy('data/portal.sqlite', 'myportal.sqlite')
+
 library(RSQLite)
 
 # Create a connection object
-con <- ...(RSQLite::SQLite(), "data/portal.sqlite")
+con <- ...(RSQLite::SQLite(), "myportal.sqlite")
 
 # Read a table
 library(dplyr)
