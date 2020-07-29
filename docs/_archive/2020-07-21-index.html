@@ -1,0 +1,815 @@
+---
+---
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Database Principles and Use</title>
+<meta name="description" content="Leverage relational models for organizing and querying data">
+<link rel="canonical"
+      href="https://SESYNC-ci.github.io/sqlite-lesson/2020/07/21/index.html">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/SESYNC-ci/lesson-style@3.0/docs/assets/css/default.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/SESYNC-ci/lesson-style@3.0/docs/assets/css/syntax.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/SESYNC-ci/lesson-style@3.0/docs/assets/css/static.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css"
+      rel="stylesheet"
+      integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU"
+      crossorigin="anonymous">
+
+    
+  </head>
+  <body>
+    <div class="page-content">
+      <div class="wrapper">
+        
+
+<h1 style="text-transform: none;" id="database-principles-and-use">Database Principles and Use</h1>
+
+<p>Lesson 9 with <em>Kelly Hondula</em></p>
+
+<nav id="ToC">
+
+  <ul>
+    <li><a href="#/slides/goals">What good is a database?</a></li>
+    <li><a href="#/slides/intro">The Portal Project</a></li>
+    <li><a href="#/slides/tables">Database Characteristics: I</a></li>
+    <li><a href="#/slides/server">Connecting to a Database</a></li>
+    <li><a href="#/slides/keys">Database Characteristics: II</a></li>
+    <li><a href="#/slides/untidy">Normalized Data is Tidy</a></li>
+    <li><a href="#/slides/summary">Summary</a></li>
+  </ul>
+</nav>
+
+<hr />
+<p><a name="/slides/goals"></a></p>
+
+<h2 id="what-good-is-a-database">What good is a database?</h2>
+
+<p>For a team of researchers implementing a collaborative workflow, the top three reasons to use a database are:</p>
+
+<ol>
+  <li><strong>concurrency</strong> - Multiple users can safely read and edit database entries simultaneously.</li>
+  <li><strong>reliability</strong> - Relational databases formalize and can enforce concepts of “tidy” data.</li>
+  <li><strong>scalability</strong> - Very large tables can be read, searched, and merged
+quickly.</li>
+</ol>
+
+<p class="notes">In this lesson, the term “database” more precisely means a relational database
+that allows data manipulation with Structured Query Language (SQL). Strictly
+speaking, the word “database” describes any collection of digitized data–a
+distinction that has mostly outlived its usefulness.</p>
+
+<h2 id="objectives">Objectives</h2>
+
+<ul>
+  <li>Understand how a database differs from a data file</li>
+  <li>Introduce the SQLite database system</li>
+  <li>Meet Structured Query Language (SQL)</li>
+  <li>Recognize the value of typed data</li>
+</ul>
+
+<h2 id="specific-achievements">Specific Achievements</h2>
+
+<ul>
+  <li>Access a SQLite database from RStudio</li>
+  <li>Create a table and view table definitions</li>
+  <li>Insert records one at a time into a table</li>
+  <li>Check primary and foreign key constraints</li>
+</ul>
+
+<!--
+## Specific Achievements
+
+- Access a SQLite database from R
+- Select data to read into data frame
+- Test primary and foreign key constraints
+-->
+
+<p class="ToS"><a href="#/slides/goals">Top of Section</a></p>
+
+<hr />
+<p><a name="/slides/intro"></a></p>
+
+<h2 id="the-portal-project">The Portal Project</h2>
+
+<p class="captioned"><img src="https://cdn.jsdelivr.net/gh/SESYNC-ci/sqlite-lesson@v0.4/docs/assets/images/portal-oct-07-15.jpg" alt="" width="40%" /><br />
+<em>Credit: <a href="https://portalproject.wordpress.com">The Portal Project</a></em></p>
+
+<p>The Portal Project is a long-term ecological study being conducted near Portal,
+AZ. Since 1977, the site has been a primary focus of research on interactions
+among rodents, ants and plants and their respective responses to climate.</p>
+
+<p class="captioned"><img src="https://cdn.jsdelivr.net/gh/SESYNC-ci/sqlite-lesson@v0.4/docs/assets/images/portalview.jpg" alt="" width="50%" /><br />
+<em>Credit: <a href="https://portalproject.wordpress.com">The Portal Project</a></em></p>
+
+<p>The research site consists of many plots – patches of the Arizona desert that
+are intensively manipulated and repeatedly surveyed. The plots have some fixed
+characteristics, such as the type of manipulation, geographic location, aspect,
+etc.</p>
+
+<p class="captioned"><img src="https://cdn.jsdelivr.net/gh/SESYNC-ci/sqlite-lesson@v0.4/docs/assets/images/img_19771.jpg" alt="" width="40%" /><br />
+<em>Credit: <a href="https://portalproject.wordpress.com">The Portal Project</a></em></p>
+
+<p>The plots have a lot of dynamic characteristics, and those changes are recorded
+in repeated surveys. In particular, the animals captured during each survey are
+identified to species, weighed, and measured.</p>
+
+<p class="captioned"><img src="https://cdn.jsdelivr.net/gh/SESYNC-ci/sqlite-lesson@v0.4/docs/assets/images/gkr2.jpg" alt="" width="50%" /><br />
+<em>Credit: <a href="https://portalproject.wordpress.com">The Portal Project</a></em></p>
+
+<p>Data from the Portal project is recorded in a relational database designed for
+reliable storage &amp; rapid access to the bounty of information produced by this
+long-term ecological experiment.</p>
+
+<p class="notes">This lesson uses real data, which has been analyzed in over 100 publications.
+The data been simplified just a little bit for the workshop, but you can
+download the <a href="http://esapubs.org/archive/ecol/E090/118/">full dataset</a> and work
+with it using exactly the same tools we learn today.</p>
+
+<p>The three key tables in the relational database are:</p>
+
+<ul>
+  <li><strong>plots</strong></li>
+  <li><strong>surveys</strong></li>
+  <li><strong>species</strong></li>
+</ul>
+
+<p class="ToS"><a href="#/slides/intro">Top of Section</a></p>
+
+<hr />
+<p><a name="/slides/tables"></a></p>
+
+<h2 id="database-characteristics-i">Database Characteristics: I</h2>
+
+<p class="notes">Database terminology builds on common ways of characterizing data files. The 
+breakdown of a table into records (by row) or fields (by column) is familiar
+to anyone who’s worked in spreadsheets. The descriptions below formalize these terms, and provide an example referencing the Portal mammals database.</p>
+
+<table>
+  <tbody>
+    <tr>
+      <td><strong>Field</strong></td>
+      <td>The smallest unit of information, each having a label and holding a value of the same type.<br /><em>e.g. The day on which a plot was surveyed.</em></td>
+    </tr>
+    <tr>
+      <td><strong>Record</strong></td>
+      <td>A collection of related values, from different fields, that all describe the same entity.<br /><em>e.g. The species, sex, weight and size of a small mammal captured during a survey.</em></td>
+    </tr>
+    <tr>
+      <td><strong>Table</strong></td>
+      <td>A collection of records, each one uniquely identified by the value of a key field.<br /><em>e.g. All records for small mammals observed during any survey.</em></td>
+    </tr>
+  </tbody>
+</table>
+
+<p class="notes">Software for using a database provides different tools for working with tables than a spreadsheet program. A database is generally characterized as being tooled for
+production environments, in contrast to data files tooled for ease of use.</p>
+
+<p><strong>Collaboration</strong></p>
+<ul>
+  <li class="fragment">Data files are stored in the cloud (sync issues), shared on a network (user collision), or copies are emailed among collaborators.</li>
+  <li class="fragment">A database server accepts simultaneous users from different clients on a network. There are never multiple copies of the data (aside from backups!).</li>
+</ul>
+
+<p class="notes">SQLite databases are not directly comparable to client/server database systems because they store data locally. Although this can provide greater simplicity and ease of use, it may require more coordination among collaborators.</p>
+
+<p><strong>Size</strong></p>
+<ul>
+  <li class="fragment">Reading an entire data file into memory isn’t scaleable. Some file types (e.g. MS Excel files) have size limits.</li>
+  <li class="fragment">Database software only reads requested parts of the data into memory. There are no size limits.</li>
+</ul>
+
+<p><strong>Quality</strong></p>
+<ul>
+  <li class="fragment">Data file formats do not typically provide any quality controls.</li>
+  <li class="fragment">Databases stricly enforce data types on each field. Letters, for example “N.A.”, cannot be entered into a field for integers.</li>
+</ul>
+
+<p><strong>Extension</strong></p>
+<ul>
+  <li class="fragment">Specialized files are needed for complicated data types (e.g. ESRI Shapefiles).</li>
+  <li class="fragment">Databases provide many non-standard data types, and very specialized ones (e.g. geometries, time and date) are available through extension packages.</li>
+</ul>
+
+<p><strong>Programming</strong></p>
+<ul>
+  <li class="fragment">There is no standard way to read, edit, or create records in data files of different formats or from different languages.</li>
+  <li class="fragment">Packages native to all popular programming languages provide access
+to databases using SQL.</li>
+</ul>
+
+<p class="ToS"><a href="#/slides/tables">Top of Section</a></p>
+
+<hr />
+<p><a name="/slides/server"></a></p>
+
+<h2 id="connecting-to-a-database">Connecting to a Database</h2>
+
+<p class="notes">We are going to look at the Portal mammals data organized in an SQLite database.
+This is stored in a single file <code class="language-plaintext highlighter-rouge">portal.sqlite</code> that can be explored using SQL
+or with tools like <a href="https://inloop.github.io/sqlite-viewer/">SQLite Viewer</a> or <a href="https://sqlitebrowser.org/">DB Browser</a>. We will use R functions in the DBI-compliant
+RSQLite package to interact with the database.</p>
+
+<h2 id="connections">Connections</h2>
+
+<p>The first step from RStudio is creating a connection object that
+opens up a channel of communication to the database file.</p>
+
+<div class="language-r text-document highlighter-rouge" title="worksheet-9.R"><div class="highlight"><pre class="highlight"><code><span class="n">library</span><span class="p">(</span><span class="n">RSQLite</span><span class="p">)</span><span class="w">
+</span><span class="n">con</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">dbConnect</span><span class="p">(</span><span class="n">RSQLite</span><span class="o">::</span><span class="n">SQLite</span><span class="p">(),</span><span class="w"> 
+                 </span><span class="s2">"data/portal.sqlite"</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<p>With the connection object availble, you can begin exploring the database.</p>
+
+<div class="language-r input highlighter-rouge" title="Console"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span><span class="w"> </span><span class="n">dbListTables</span><span class="p">(</span><span class="n">con</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<div class="language-plaintext output highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[1] "plots"     "species"   "surveys"  
+</code></pre></div></div>
+
+<div class="language-r input highlighter-rouge" title="Console"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span><span class="w"> </span><span class="n">dbListFields</span><span class="p">(</span><span class="n">con</span><span class="p">,</span><span class="w"> </span><span class="s1">'species'</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<div class="language-plaintext output highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[1] "species_id" "genus"      "species"    "taxa"      
+</code></pre></div></div>
+
+<p>Read an entire database table into an R data frame with <code class="language-plaintext highlighter-rouge">dbReadTable</code>, or if you
+prefer “tidyverse” functions, use the <a href="" class="rlib">dplyr</a> <code class="language-plaintext highlighter-rouge">tbl</code> function.</p>
+
+<div class="language-r text-document highlighter-rouge" title="worksheet-9.R"><div class="highlight"><pre class="highlight"><code><span class="n">library</span><span class="p">(</span><span class="n">dplyr</span><span class="p">)</span><span class="w">
+</span><span class="n">species</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">tbl</span><span class="p">(</span><span class="n">con</span><span class="p">,</span><span class="w"> </span><span class="s1">'species'</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<div class="language-r input highlighter-rouge" title="Console"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span><span class="w"> </span><span class="n">species</span><span class="w">
+</span></code></pre></div></div>
+
+<div class="language-plaintext output highlighter-rouge"><div class="highlight"><pre class="highlight"><code># Source:   table&lt;species&gt; [?? x 4]
+# Database: sqlite 3.30.1 [/nfs/public-data/training/portal.sqlite]
+   species_id genus            species         taxa   
+   &lt;chr&gt;      &lt;chr&gt;            &lt;chr&gt;           &lt;chr&gt;  
+ 1 AB         Amphispiza       bilineata       Bird   
+ 2 AH         Ammospermophilus harrisi         Rodent 
+ 3 AS         Ammodramus       savannarum      Bird   
+ 4 BA         Baiomys          taylori         Rodent 
+ 5 CB         Campylorhynchus  brunneicapillus Bird   
+ 6 CM         Calamospiza      melanocorys     Bird   
+ 7 CQ         Callipepla       squamata        Bird   
+ 8 CS         Crotalus         scutalatus      Reptile
+ 9 CT         Cnemidophorus    tigris          Reptile
+10 CU         Cnemidophorus    uniparens       Reptile
+# … with more rows
+</code></pre></div></div>
+
+<p>The <code class="language-plaintext highlighter-rouge">dbWriteTable</code> function provides a mechanism for uploading data, as long as
+the user specified in the connection object has permission to create tables.</p>
+
+<div class="language-r text-document highlighter-rouge" title="worksheet-9.R"><div class="highlight"><pre class="highlight"><code><span class="n">df</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">data.frame</span><span class="p">(</span><span class="w">
+  </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">2</span><span class="p">),</span><span class="w">
+  </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="s1">'Alice'</span><span class="p">,</span><span class="w"> </span><span class="s1">'Bob'</span><span class="p">)</span><span class="w">
+</span><span class="p">)</span><span class="w">
+
+</span><span class="n">dbWriteTable</span><span class="p">(</span><span class="n">con</span><span class="p">,</span><span class="w"> </span><span class="s2">"observers"</span><span class="p">,</span><span class="w"> 
+             </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<div class="language-r no-eval input highlighter-rouge" title="Console"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span><span class="w"> </span><span class="n">dbReadTable</span><span class="p">(</span><span class="n">con</span><span class="p">,</span><span class="w"> </span><span class="s1">'observers'</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<p class="ToS"><a href="#/slides/server">Top of Section</a></p>
+
+<hr />
+<p><a name="/slides/keys"></a></p>
+
+<h2 id="database-characteristics-ii">Database Characteristics: II</h2>
+
+<p class="notes">Returning to the bigger picture and our comparison of storing data in files as
+opposed to a database, there are some concepts that only apply to databases. We
+have seen that databases include multiple tables—so far, that’s not so
+different from keeping multiple spreadsheets in one MS Excel workbook or in
+multiple CSV files. The collection of tables in a <strong>relational database</strong>,
+however, can be structured by built-in relationships between records from
+different tables. Data is assembled in the correct arrangement for analysis
+“just in time” by scripting database queries that join tables on these
+relationships.</p>
+
+<table>
+  <tbody>
+    <tr>
+      <td><strong>Primary key</strong></td>
+      <td>One or more fields (but <em>usually</em> one) that uniquely identify a record in a table.</td>
+    </tr>
+    <tr>
+      <td><strong>Foreign key</strong></td>
+      <td>A primary key from one table used in different table to establish a relationship.</td>
+    </tr>
+    <tr>
+      <td><strong>Query</strong></td>
+      <td>Collect values from tables based on their relationships and other constraints.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="primary-keys">Primary Keys</h3>
+
+<p>In the <code class="language-plaintext highlighter-rouge">plots</code> table, <code class="language-plaintext highlighter-rouge">id</code> is the primary key. Any new record <em>cannot</em> duplicate an existing id.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>id</th>
+      <th>treatment</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>Control</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>Rodent Exclosure</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>Control</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Recreate the <code class="language-plaintext highlighter-rouge">observers</code> table with <code class="language-plaintext highlighter-rouge">id</code> as a primary key will prevent the
+duplication observed from multiple identical <code class="language-plaintext highlighter-rouge">dbWriteTable</code> calls.</p>
+
+<div class="language-r text-document highlighter-rouge" title="worksheet-9.R"><div class="highlight"><pre class="highlight"><code><span class="n">dbCreateTable</span><span class="p">(</span><span class="n">con</span><span class="p">,</span><span class="w"> </span><span class="s1">'observers'</span><span class="p">,</span><span class="w"> </span><span class="nf">list</span><span class="p">(</span><span class="w">
+  </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'integer primary key'</span><span class="p">,</span><span class="w">
+  </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'text'</span><span class="w">
+</span><span class="p">))</span><span class="w">
+</span></code></pre></div></div>
+
+<p>When appending a data frame to the table created with “integer primary key”,
+the <code class="language-plaintext highlighter-rouge">id</code> is automatically generated and unique.</p>
+
+<div class="language-r text-document highlighter-rouge" title="worksheet-9.R"><div class="highlight"><pre class="highlight"><code><span class="n">df</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">data.frame</span><span class="p">(</span><span class="w">
+  </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="s1">'Alice'</span><span class="p">,</span><span class="w"> </span><span class="s1">'Bob'</span><span class="p">)</span><span class="w">
+</span><span class="p">)</span><span class="w">
+</span><span class="n">dbWriteTable</span><span class="p">(</span><span class="n">con</span><span class="p">,</span><span class="w"> </span><span class="s1">'observers'</span><span class="p">,</span><span class="w"> </span><span class="n">df</span><span class="p">,</span><span class="w">
+             </span><span class="n">append</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">TRUE</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Primary keys are checked <strong>before</strong> duplicates end up in the data, throwing an
+error if necessary.</p>
+
+<div class="language-r text-document highlighter-rouge" title="worksheet-9.R"><div class="highlight"><pre class="highlight"><code><span class="n">df</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">data.frame</span><span class="p">(</span><span class="w">
+  </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">1</span><span class="p">),</span><span class="w">
+  </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="s1">'J. Doe'</span><span class="p">)</span><span class="w">
+</span><span class="p">)</span><span class="w">
+</span><span class="n">dbWriteTable</span><span class="p">(</span><span class="n">con</span><span class="p">,</span><span class="w"> </span><span class="s1">'observers'</span><span class="p">,</span><span class="w"> </span><span class="n">df</span><span class="p">,</span><span class="w">
+             </span><span class="n">append</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">TRUE</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<div class="language-plaintext output highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Error: external pointer is not valid
+</code></pre></div></div>
+
+<h3 id="foreign-keys">Foreign Keys</h3>
+
+<p>A field may also be designated as a foreign key, which establishes a
+relationship between tables. A foreign key points to some primary key from a
+different table.</p>
+
+<p>In the <code class="language-plaintext highlighter-rouge">surveys</code> table, <code class="language-plaintext highlighter-rouge">id</code> is the primary key and both <code class="language-plaintext highlighter-rouge">plot_id</code> and
+<code class="language-plaintext highlighter-rouge">species_id</code> are foreign keys.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>id</th>
+      <th>month</th>
+      <th>day</th>
+      <th>year</th>
+      <th>plot_id</th>
+      <th>species_id</th>
+      <th>sex</th>
+      <th>hindfoot_length</th>
+      <th>weight</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>7</td>
+      <td>16</td>
+      <td>1977</td>
+      <td>2</td>
+      <td>ST</td>
+      <td>M</td>
+      <td>32</td>
+      <td>0.45</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>7</td>
+      <td>16</td>
+      <td>1977</td>
+      <td>2</td>
+      <td>PX</td>
+      <td>M</td>
+      <td>33</td>
+      <td>0.23</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>7</td>
+      <td>16</td>
+      <td>1978</td>
+      <td>1</td>
+      <td>RO</td>
+      <td>F</td>
+      <td>14</td>
+      <td>1.23</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>To enable foreign key constraints in sqlite run the following:</p>
+
+<div class="language-r text-document highlighter-rouge" title="worksheet-9.R"><div class="highlight"><pre class="highlight"><code><span class="n">dbExecute</span><span class="p">(</span><span class="n">con</span><span class="p">,</span><span class="w"> </span><span class="s1">'PRAGMA foreign_keys = ON;'</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<div class="language-plaintext output highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[1] 0
+</code></pre></div></div>
+
+<p>Foreign keys are checked <strong>before</strong> nonsensical references end up in the data. To enable foreign key constraints in sqlite run the following:</p>
+
+<div class="language-r text-document highlighter-rouge" title="worksheet-9.R"><div class="highlight"><pre class="highlight"><code><span class="n">df</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">data.frame</span><span class="p">(</span><span class="w">
+  </span><span class="n">month</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">7</span><span class="p">,</span><span class="w">
+  </span><span class="n">day</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">16</span><span class="p">,</span><span class="w">
+  </span><span class="n">year</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1977</span><span class="p">,</span><span class="w">
+  </span><span class="n">plot_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'Rodent'</span><span class="w">
+</span><span class="p">)</span><span class="w">
+</span><span class="n">dbWriteTable</span><span class="p">(</span><span class="n">con</span><span class="p">,</span><span class="w"> </span><span class="s1">'surveys'</span><span class="p">,</span><span class="w"> </span><span class="n">df</span><span class="p">,</span><span class="w">
+             </span><span class="n">append</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">TRUE</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<div class="language-plaintext output highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Error: FOREIGN KEY constraint failed
+</code></pre></div></div>
+
+<h3 id="query">Query</h3>
+
+<p class="notes">Structured Query Language (SQL) is a high-level language for interacting with
+relational databases. Commands use intuitive English words but can be strung
+together and nested in powerful ways. SQL is not the <em>only</em> way to query a
+database from R (cf. <a href="" class="rlib">dbplyr</a>), but sometimes it is the only way to
+perform a complicated query.</p>
+
+<p>To write SQL statements in RStudio, it is also possible to use the <code class="language-plaintext highlighter-rouge">sql</code> engine for code chunks in a 
+RMarkdown file:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>```{sql connection = con}
+...
+```
+</code></pre></div></div>
+
+<p>We will continue to use R functions to pass SQL code to the database file using <code class="language-plaintext highlighter-rouge">dbGetQuery</code> functions.</p>
+
+<h3 id="basic-queries">Basic queries</h3>
+
+<p>Let’s write a SQL query that selects only the year column from the animals
+table.</p>
+
+<div class="language-r no-eval text-document highlighter-rouge" title="worksheet-9.R"><div class="highlight"><pre class="highlight"><code><span class="n">dbGetQuery</span><span class="p">(</span><span class="n">con</span><span class="p">,</span><span class="w"> </span><span class="s2">"SELECT year FROM surveys"</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<p class="notes">A note on style: we have capitalized the words SELECT and FROM because they are
+SQL keywords. Unlike R, SQL is case insensitive, so capitalization only helps
+for readability and is a good style to adopt.</p>
+
+<p>To select data from multiple fields, include multiple fields as a
+comma-separated list right after SELECT:</p>
+
+<div class="language-r no-eval text-document highlighter-rouge" title="worksheet-9.R"><div class="highlight"><pre class="highlight"><code><span class="n">dbGetQuery</span><span class="p">(</span><span class="n">con</span><span class="p">,</span><span class="w"> </span><span class="s2">"SELECT year, month, day 
+           FROM surveys"</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<p>The line break before <code class="language-plaintext highlighter-rouge">FROM</code> is also good form, particularly as the length of the query grows.</p>
+
+<p>Or select all of the columns in a table using a wildcard:</p>
+
+<div class="language-r no-eval text-document highlighter-rouge" title="worksheet-9.R"><div class="highlight"><pre class="highlight"><code><span class="n">dbGetQuery</span><span class="p">(</span><span class="n">con</span><span class="p">,</span><span class="w"> </span><span class="s2">"SELECT *
+FROM surveys"</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<h3 id="limit">Limit</h3>
+
+<p>We can use the LIMIT statement to select only the first few rows. This is
+particularly helpful when getting a feel for very large tables.</p>
+
+<div class="language-r no-eval text-document highlighter-rouge" title="worksheet-9.R"><div class="highlight"><pre class="highlight"><code><span class="n">dbGetQuery</span><span class="p">(</span><span class="n">con</span><span class="p">,</span><span class="w"> </span><span class="s2">"SELECT year, species_id
+FROM surveys
+LIMIT 4"</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<h3 id="unique-values">Unique values</h3>
+
+<p>If we want only the unique values so that we can quickly see what species have
+been sampled we use <code class="language-plaintext highlighter-rouge">DISTINCT</code></p>
+
+<div class="language-r no-eval text-document highlighter-rouge" title="worksheet-9.R"><div class="highlight"><pre class="highlight"><code><span class="n">dbGetQuery</span><span class="p">(</span><span class="n">con</span><span class="p">,</span><span class="w"> </span><span class="s2">"SELECT DISTINCT species_id
+FROM surveys"</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<p>If we select more than one column, then the distinct pairs of values are
+returned</p>
+
+<div class="language-r no-eval text-document highlighter-rouge" title="worksheet-9.R"><div class="highlight"><pre class="highlight"><code><span class="n">dbGetQuery</span><span class="p">(</span><span class="n">con</span><span class="p">,</span><span class="w"> </span><span class="s2">"SELECT DISTINCT year, species_id
+FROM surveys"</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<h3 id="calculations">Calculations</h3>
+
+<p>We can also do calculations with the values in a query. For example, if we
+wanted to look at the mass of each individual, by plot, species, and sex, but we
+needed it in kg instead of g we would use</p>
+
+<div class="language-r no-eval text-document highlighter-rouge" title="worksheet-9.R"><div class="highlight"><pre class="highlight"><code><span class="n">dbGetQuery</span><span class="p">(</span><span class="n">con</span><span class="p">,</span><span class="w"> </span><span class="s2">"SELECT plot_id, species_id,
+  sex, weight / 1000.0
+FROM surveys"</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<p>The expression <code class="language-plaintext highlighter-rouge">weight / 1000.0</code> is evaluated for each row
+and appended to that row, in a new column.</p>
+
+<p>You can assign the new column a name by typing “AS weight_kg” after the
+expression.</p>
+
+<div class="language-r no-eval text-document highlighter-rouge" title="worksheet-9.R"><div class="highlight"><pre class="highlight"><code><span class="n">dbGetQuery</span><span class="p">(</span><span class="n">con</span><span class="p">,</span><span class="w"> </span><span class="s2">"SELECT plot_id, species_id, sex,
+  weight / 1000 AS weight_kg
+FROM surveys"</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Expressions can use any fields, any arithmetic operators (+ - * /) and a variety
+of built-in functions. For example, we could round the values to make them
+easier to read.</p>
+
+<div class="language-r no-eval text-document highlighter-rouge" title="worksheet-9.R"><div class="highlight"><pre class="highlight"><code><span class="n">dbGetQuery</span><span class="p">(</span><span class="n">con</span><span class="p">,</span><span class="w"> </span><span class="s2">"SELECT plot_id, species_id, sex,
+  ROUND(weight / 1000.0, 2) AS weight_kg
+FROM surveys"</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<p class="notes">The underlying data in the wgt column of the table does not change. The query,
+which exists separately from the data, simply displays the calculation we
+requested in the query result window pane.</p>
+
+<h2 id="filtering">Filtering</h2>
+
+<p>Databases can also filter data – selecting only those records meeting certain
+criteria.  For example, let’s say we only want data for the species “Dipodomys
+merriami”, which has a species code of “DM”.  We need to add a <code class="language-plaintext highlighter-rouge">WHERE</code> clause to
+our query.</p>
+
+<div class="language-r no-eval text-document highlighter-rouge" title="worksheet-9.R"><div class="highlight"><pre class="highlight"><code><span class="n">dbGetQuery</span><span class="p">(</span><span class="n">con</span><span class="p">,</span><span class="w"> </span><span class="s2">"SELECT *
+FROM surveys
+WHERE species_id = 'DM'"</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Of course, we can do the same thing with numbers.</p>
+
+<div class="language-r no-eval text-document highlighter-rouge" title="worksheet-9.R"><div class="highlight"><pre class="highlight"><code><span class="n">dbGetQuery</span><span class="p">(</span><span class="n">con</span><span class="p">,</span><span class="w"> </span><span class="s2">"SELECT *
+FROM surveys
+WHERE year &gt;= 2000"</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<p>More sophisticated conditions arise from combining tests with AND and OR. For
+example, suppose we want the data on <em>Dipodomys merriami</em> starting in the year
+2000.</p>
+
+<div class="language-r no-eval text-document highlighter-rouge" title="worksheet-9.R"><div class="highlight"><pre class="highlight"><code><span class="n">dbGetQuery</span><span class="p">(</span><span class="n">con</span><span class="p">,</span><span class="w"> </span><span class="s2">"SELECT *
+FROM surveys
+WHERE year &gt;= 2000 AND species_id = 'DM'"</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Parentheses can be used to help with readability and to ensure that AND and OR
+are combined in the way that we intend. If we wanted to get all the animals for
+“DM” since 2000 or up to 1990 we could combine the tests using OR:</p>
+
+<div class="language-r no-eval text-document highlighter-rouge" title="worksheet-9.R"><div class="highlight"><pre class="highlight"><code><span class="n">dbGetQuery</span><span class="p">(</span><span class="n">con</span><span class="p">,</span><span class="w"> </span><span class="s2">"SELECT *
+FROM surveys
+WHERE (year &gt;= 2000 OR year &lt;= 1990)
+  AND species_id = 'DM'"</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<p class="ToS"><a href="#/slides/keys">Top of Section</a></p>
+
+<hr />
+<p><a name="/slides/untidy"></a></p>
+
+<h2 id="normalized-data-is-tidy">Normalized Data is Tidy</h2>
+
+<p>Proper use of table relationships is a challenging part of database design. The
+objective is <strong>normalization</strong>, or taking steps to define logical “observational
+units” and minimize data redundency.</p>
+
+<p class="notes">For example, the genus and species names are not attributes of an animal: they
+are attributes of the species attributed to an animal. Data about a species
+belongs in a different observational unit from data about the animal captured in
+a survey. With an ideal database design, any value discovered to be erroneous
+should only have to be corrected in one record in one table.</p>
+
+<dl>
+  <dt>Question</dt>
+  <dd>Currently, <code class="language-plaintext highlighter-rouge">plots</code> is pretty sparse. What other kind of data might go into plots?</dd>
+  <dt>Answer</dt>
+  <dd class="fragment">Additional properties, such as location, that do not change between surveys.</dd>
+</dl>
+
+<h2 id="un-tidy-data-with-joins">Un-tidy data with JOINs</h2>
+
+<p>A good data management principle is to record and store data in the most
+normalized form possible, and un-tidy your tables as needed for particular
+analyses. The SQL “JOIN” clause lets you create records with fields from
+multiple tables.</p>
+
+<p>Consider for example what you must do to carry out a regression of animal weight
+against plot treatment using the R command:</p>
+
+<div class="language-r no-eval text-document highlighter-rouge" title="worksheet-9.R"><div class="highlight"><pre class="highlight"><code><span class="n">lm</span><span class="p">(</span><span class="n">weight</span><span class="w"> </span><span class="o">~</span><span class="w"> </span><span class="n">treatment</span><span class="p">,</span><span class="w">
+   </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">portal</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<p>You need a “data.frame” called <code class="language-plaintext highlighter-rouge">portal</code> with rows for each animal that also
+includes a “treatment” inferred from “plot_id”.</p>
+
+<p>Additionally suppose you want to account for genus in this regression, expanding
+the previous R command to:</p>
+
+<div class="language-r no-eval text-document highlighter-rouge" title="worksheet-9.R"><div class="highlight"><pre class="highlight"><code><span class="n">lm</span><span class="p">(</span><span class="n">weight</span><span class="w"> </span><span class="o">~</span><span class="w"> </span><span class="n">genus</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">treatment</span><span class="p">,</span><span class="w">
+   </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">portal</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<p>You need another column for genus in the <code class="language-plaintext highlighter-rouge">portal</code> data.frame, inferred from
+“species_id” for each animal and the species table.</p>
+
+<h2 id="relations">Relations</h2>
+
+<p>There are two kinds of relations–schemas that use primary and foreign key
+references–that permit table joins:</p>
+
+<ul>
+  <li>One-To-Many</li>
+  <li>Many-To-Many</li>
+</ul>
+
+<h3 id="one-to-many-relationship">One-To-Many Relationship</h3>
+
+<p>The primary key in the first table is referred to multiple times in the foreign
+key of the second table.</p>
+
+<p class="captioned"><img src="https://cdn.jsdelivr.net/gh/SESYNC-ci/sqlite-lesson@v0.4/docs/assets/images/many-to-one.png" alt="" width="50%" style="border:0px;box-shadow:none;" /></p>
+
+<p>The SQL keyword “JOIN” matches up two tables in the way dictated by the
+constraint following “ON”, duplicating records as necessary.</p>
+
+<div class="language-r no-eval text-document highlighter-rouge" title="worksheet-9.R"><div class="highlight"><pre class="highlight"><code><span class="n">dbGetQuery</span><span class="p">(</span><span class="n">con</span><span class="p">,</span><span class="w"> </span><span class="s2">"SELECT weight, plot_type
+FROM surveys
+JOIN plots
+  ON surveys.plot_id = plots.plot_id"</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<p>The resulting table could be the basis for the <code class="language-plaintext highlighter-rouge">portal</code> data.frame needed in the
+R command <code class="language-plaintext highlighter-rouge">lm(weight ~ treatment, data = portal)</code>.</p>
+
+<h3 id="many-to-many-relationship">Many-To-Many Relationship</h3>
+
+<p>Each primary key from the first table may relate to any number of primary keys
+from the second table <strong>and</strong> <em>vice versa</em>. A many-to-many relationship is
+induced by the existance of an “association table” involved in <strong>two</strong>
+one-to-many relations.</p>
+
+<p class="captioned"><img src="https://cdn.jsdelivr.net/gh/SESYNC-ci/sqlite-lesson@v0.4/docs/assets/images/many-to-many.png" alt="" width="80%" style="border:0px;box-shadow:none;" /></p>
+
+<p>Surveys is an “association table” because it includes two foreign keys.</p>
+
+<div class="language-r no-eval text-document highlighter-rouge" title="worksheet-9.R"><div class="highlight"><pre class="highlight"><code><span class="n">dbGetQuery</span><span class="p">(</span><span class="n">con</span><span class="p">,</span><span class="w"> </span><span class="s2">"SELECT weight, genus, plot_type
+FROM surveys
+JOIN plots
+  ON surveys.plot_id = plots.plot_id
+JOIN species
+  ON surveys.species_id = species.species_id"</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<p>The resulting table could be the basis for the <code class="language-plaintext highlighter-rouge">portal</code> data.frame needed in the
+R command <code class="language-plaintext highlighter-rouge">lm(weight ~ genus + treatment, data = portal)</code>.</p>
+
+<div class="language-plaintext output highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Warning in connection_release(conn@ptr): Already disconnected
+</code></pre></div></div>
+
+<p class="ToS"><a href="#/slides/untidy">Top of Section</a></p>
+
+<hr />
+<p><a name="/slides/summary"></a></p>
+
+<h2 id="summary">Summary</h2>
+
+<ul>
+  <li><strong>concurrency</strong></li>
+  <li><strong>reliability</strong></li>
+  <li><strong>scaleability</strong></li>
+</ul>
+
+<p>Databases are a core element of a centralized workflow that requires
+simultaneous use by multiple members of a collaborative team. A server-
+based database such as Postgres will allow you to take advantage of 
+<strong>concurrency</strong> features that prevent data corruption.</p>
+
+<p>The ability to precisely define keys and data types is the primary database
+feature that guaranties <strong>reliability</strong>. As you develop scripts for analysis and
+vizualization, certainty that you’ll never encounter a “NaN” when you expect an
+Integer will prevent, or help you catch, bugs in your code.</p>
+
+<p>The third major feature to motivate databae use, <strong>scaleability</strong>, remains for
+you to discover, using the tools from this lesson. Very large tables can be
+queried, sorted and combined quickly when the work is done by a powerful
+relational database management system (RDBMS), such as PostgreSQL.</p>
+
+<p class="ToS"><a href="#/slides/summary">Top of Section</a></p>
+
+
+
+        <hr>
+
+<p>If you need to catch-up before a section of code will work, just squish it's
+🍅 to copy code above it into your clipboard. Then paste into your interpreter's
+console, run, and you'll be ready to start in on that section. Code copied by
+both 🍅 and 📋 will also appear below, where you can edit first, and then copy,
+paste, and run again.</p>
+
+<div class="output">
+  <pre id="ketchup" contenteditable="true"><code># Nothing here yet!</code></pre>
+</div>
+
+<script>
+$(document).ready(function(){
+  
+  // Add code help icons to code blocks
+  $('.input, .text-document').append('<ul class="code-help">');
+  $('.code-help')
+    .append('<li class="clipboard">📋</li>');
+  $('.text-document:not(.no-eval) .code-help')
+    .append('<li class="ketchup">🍅</li>');
+
+  // Bind copy actions to mouse clicks on icons
+  var $ketchup = $('#ketchup');
+  var rng = document.createRange();
+  var sel = window.getSelection();
+  $('.ketchup').click(function(){
+    var $prev = $(this)
+      .parents('.text-document')
+      .prevAll('.text-document:has(.ketchup)');
+    $ketchup.find('code').text($prev.find('pre').text());
+    rng.selectNodeContents($ketchup[0]);
+    sel.removeAllRanges();
+    sel.addRange(rng);
+    document.execCommand("copy");
+    sel.removeAllRanges();
+  });
+  $('.text-document .clipboard').click(function(){
+    var pre = $(this).parents('.text-document').find('pre').text();
+    $ketchup.find('code').text(pre);
+    rng.selectNodeContents($ketchup[0]);
+    sel.removeAllRanges();
+    sel.addRange(rng);
+    document.execCommand("copy");
+    sel.removeAllRanges();
+  });
+  $('.input .clipboard').click(function(){
+    var pre = $(this).parents('.input').find('pre').text();
+    pre = pre.replace(/(^|\n)[>+] /g, '$1');
+    $ketchup.find('code').text(pre);
+    rng.selectNodeContents($ketchup[0]);
+    sel.removeAllRanges();
+    sel.addRange(rng);
+    document.execCommand("copy");
+    sel.removeAllRanges();
+  });
+});
+</script>
+      </div>
+    </div>
+    <script>
+$(document).ready(function(){
+  // Add links to R and Python package repositories
+  $('a.rlib').map(function(){
+    this.href = 'https://cran.r-project.org/package=' + this.innerText;
+  });
+  $('a.pylib').map(function(){
+    this.href = 'https://pypi.python.org/pypi/' + this.innerText;
+  });
+});
+</script>
+
+  </body>
+</html>
