@@ -1,3 +1,5 @@
+[![lifecycle](https://img.shields.io/badge/lifecycle-beta-blue.svg)](https://github.com/SESYNC-ci/sesync-ci.github.io/blob/master/lesson/lesson-lifecycle.md#beta)
+
 ## Database Principles and Use
 
 Leverage relational models for organizing and querying data
