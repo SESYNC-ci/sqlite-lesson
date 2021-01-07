@@ -4,6 +4,9 @@ handouts:
  - data/portal.sqlite
 tag: v0.4
 lesson: 9
+lifecycle: beta # status for lifecycle badge
+badgecolor: blue # color for lifecycle badge
+warning: true # whether to include note about lifecycle status
 instructor: Kelly Hondula
 authors:
   - Ian Carroll
