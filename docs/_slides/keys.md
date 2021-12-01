@@ -32,7 +32,7 @@ In the `plots` table, `id` is the primary key. Any new record *cannot* duplicate
 
 ===
 
-Recreate the `observers` table with `id` as a primary key will prevent the
+Recreate the `observers` table with `id` as a primary key; this will prevent the
 duplication observed from multiple identical `dbWriteTable` calls.
 
 
@@ -40,9 +40,12 @@ duplication observed from multiple identical `dbWriteTable` calls.
 
 
 ~~~r
+dbRemoveTable(con, 'observers') # remove the old version of the table
+
+# create the new version of the table
 dbCreateTable(con, 'observers', list(
   id = 'integer primary key',
-  name = 'text'
+  name = 'text', overwrite = TRUE
 ))
 ~~~
 {:title="{{ site.data.lesson.handouts[0] }}" .text-document}
@@ -84,7 +87,7 @@ dbWriteTable(con, 'observers', df,
 
 
 ~~~
-Error: external pointer is not valid
+Error: UNIQUE constraint failed: observers.id
 ~~~
 {:.output}
 

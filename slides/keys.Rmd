@@ -32,7 +32,7 @@ In the `plots` table, `id` is the primary key. Any new record *cannot* duplicate
 
 ===
 
-Recreate the `observers` table with `id` as a primary key will prevent the
+Recreate the `observers` table with `id` as a primary key; this will prevent the
 duplication observed from multiple identical `dbWriteTable` calls.
 
 ```{r, handout = 0, eval = TRUE, echo=FALSE}
@@ -42,9 +42,12 @@ con <- dbConnect(RSQLite::SQLite(),
 ```
 
 ```{r, handout=0}
+dbRemoveTable(con, 'observers') # remove the old version of the table
+
+# create the new version of the table
 dbCreateTable(con, 'observers', list(
   id = 'integer primary key',
-  name = 'text'
+  name = 'text', overwrite = TRUE
 ))
 ```
 

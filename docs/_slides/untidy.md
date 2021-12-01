@@ -137,9 +137,3 @@ The resulting table could be the basis for the `portal` data.frame needed in the
 R command `lm(weight ~ genus + treatment, data = portal)`.
 
 
-
-~~~
-Warning in connection_release(conn@ptr): Already disconnected
-~~~
-{:.output}
-

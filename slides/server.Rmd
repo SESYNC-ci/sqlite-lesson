@@ -65,7 +65,7 @@ df <- data.frame(
 )
 
 dbWriteTable(con, "observers", 
-             value = df)
+             value = df, overwrite = TRUE)
 ```
 
 ===

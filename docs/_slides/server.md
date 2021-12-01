@@ -42,7 +42,7 @@ With the connection object availble, you can begin exploring the database.
 
 
 ~~~
-[1] "plots"     "species"   "surveys"  
+[1] "observers" "plots"     "species"   "surveys"  
 ~~~
 {:.output}
 
@@ -86,7 +86,7 @@ species <- tbl(con, 'species')
 
 ~~~
 # Source:   table<species> [?? x 4]
-# Database: sqlite 3.30.1 [/nfs/public-data/training/portal.sqlite]
+# Database: sqlite 3.36.0 [/nfs/public-data/training/portal.sqlite]
    species_id genus            species         taxa   
    <chr>      <chr>            <chr>           <chr>  
  1 AB         Amphispiza       bilineata       Bird   
@@ -118,7 +118,7 @@ df <- data.frame(
 )
 
 dbWriteTable(con, "observers", 
-             value = df)
+             value = df, overwrite = TRUE)
 ~~~
 {:title="{{ site.data.lesson.handouts[0] }}" .text-document}
 
